@@ -1,0 +1,65 @@
+# ใช้ Docker Compose เพื่อสร้าง FTP Server
+# ใช้ Image pure-ftpd
+# รองรับ Passive Mode ผ่านช่วง port 30000–30009
+# ผูกโฟลเดอร์กับเครื่องจริงเพื่อเก็บไฟล์ถาวร
+# สามารถเชื่อมต่อได้ทั้ง
+# Web Application (Flask)
+# FileZilla Client
+
+version: "3.8"
+# ระบุเวอร์ชันของ docker-compose
+# 3.8 รองรับ Docker รุ่นใหม่และฟีเจอร์ด้าน network/volume ครบถ้วน
+
+services:
+  # ส่วนกำหนด service ต่าง ๆ ที่จะรันด้วย Docker
+
+  ftp:
+    # ชื่อ service เรียกว่า ftp (ใช้เรียกภายใน docker-compose)
+
+    image: stilliard/pure-ftpd
+    # ใช้ Docker Image pure-ftpd ซึ่งเป็น FTP Server สำเร็จรูป
+
+    container_name: ftp-server
+    # ตั้งชื่อ container ให้จำง่าย ใช้เรียกด้วย docker exec / docker logs ได้
+
+    ports:
+      - "21:21"
+      # map port 21 ของเครื่อง host ไปยัง port 21 ของ container
+      # ใช้สำหรับ FTP control connection (login, command)
+
+      - "30000-30009:30000-30009"
+      # map ช่วง port สำหรับ Passive Mode
+      # จำเป็นเพื่อให้ FTP Client (เช่น FileZilla) รับส่งข้อมูลได้
+
+      # ชื่อและรหัสผ่านของผู้ใช้
+    environment:
+      # ตัวแปร environment สำหรับตั้งค่า pure-ftpd
+
+      PUBLICHOST: "127.0.0.1"
+      # ระบุ IP ของเครื่องที่ให้ FTP Client เชื่อมต่อ
+      # ใช้ localhost เพราะรันบนเครื่องเดียวกัน
+
+      FTP_USER_NAME: YJ
+      # กำหนดชื่อผู้ใช้ FTP อัตโนมัติ
+
+      FTP_USER_PASS: 1234
+      # กำหนดรหัสผ่านของผู้ใช้ FTP
+
+      FTP_USER_HOME: /home/ftpusers/ftpuser1
+      # โฟลเดอร์ home directory ของผู้ใช้ FTP
+      # เมื่อ login จะเข้ามาอยู่ในโฟลเดอร์นี้
+
+      ADDED_FLAGS: "--passiveportrange 30000:30009 --forcepassiveip 127.0.0.1"
+      # ตั้งค่าเพิ่มเติมให้ pure-ftpd
+      # --passiveportrange : กำหนดช่วง port สำหรับ passive mode
+      # --forcepassiveip   : บังคับใช้ IP นี้ในการเชื่อมต่อ passive
+
+    volumes:
+      - ./server_files:/home/ftpusers
+      # map โฟลเดอร์ server_files บนเครื่อง host
+      # ไปยัง /home/ftpusers ภายใน container
+      # เพื่อให้ไฟล์ FTP ไม่หายเมื่อ container ถูก restart
+
+    restart: always
+    # หาก container หยุดทำงาน จะ restart อัตโนมัติ
+    # เพิ่มความเสถียรของระบบ

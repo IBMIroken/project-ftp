@@ -1,4 +1,4 @@
-/* UX/UI สี */
+/* ส่วนตกแต่ง */
 
 /* ตั้งค่าพื้นฐานทั้งหน้าเว็บ */
 * {
@@ -27,7 +27,7 @@ body {
 
 /* หัวข้อ */
 .card h2 {
-    margin-bottom: 20px;                                        /* ระยะห่าง */
+    margin-bottom: 20px;                                  
 }
 
 /* ช่องกรอกข้อมูล */
@@ -37,7 +37,7 @@ input {
     margin: 8px 0;                                             /* ระยะห่าง */
     border-radius: 8px;
     border: 1px solid #ccc; 
-    outline: none;                                             /* ไม่ให้มีเส้นขอบเวลาเลือก */
+    outline: none;                                          
 }
 
 /* ช่องกรอกข้อมูล */

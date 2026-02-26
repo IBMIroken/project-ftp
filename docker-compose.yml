@@ -7,38 +7,33 @@
 # FileZilla Client
 
 version: "3.8"
-# ระบุเวอร์ชันของ docker-compose
-# 3.8 รองรับ Docker รุ่นใหม่และฟีเจอร์ด้าน network/volume ครบถ้วน
+# การกำหนดเวอร์ชันของ Docker Compose ที่ใช้ในโปรเจกต์
 
 services:
-  # ส่วนกำหนด service ต่าง ๆ ที่จะรันด้วย Docker
+  # การกำหนด service ที่ Docker จะสร้างขึ้น
 
   ftp:
-    # ชื่อ service เรียกว่า ftp (ใช้เรียกภายใน docker-compose)
 
     image: stilliard/pure-ftpd
-    # ใช้ Docker Image pure-ftpd ซึ่งเป็น FTP Server สำเร็จรูป
+    # *---* ตรงนี้คือการกำหนดให้ Docker ใช้ image pure-ftpd เพื่อสร้าง FTP Server *---*
 
     container_name: ftp-server
-    # ตั้งชื่อ container ให้จำง่าย ใช้เรียกด้วย docker exec / docker logs ได้
+    # *---* ตั้งชื่อ container ให้จำง่าย ใช้เรียกด้วย docker exec / docker logs ได้ *---*
 
     ports:
       - "21:21"
-      # map port 21 ของเครื่อง host ไปยัง port 21 ของ container
-      # ใช้สำหรับ FTP control connection (login, command)
 
       - "30000-30009:30000-30009"
-      # map ช่วง port สำหรับ Passive Mode
-      # จำเป็นเพื่อให้ FTP Client (เช่น FileZilla) รับส่งข้อมูลได้
+      # *---* ส่วนนี้คือการเปิดพอร์ต 21 สำหรับ FTP และช่วงพอร์ต 30000-30009 สำหรับ Passive Mode *---*
 
-      # ชื่อและรหัสผ่านของผู้ใช้
+      # *---* ส่วนนี้คือการกำหนดชื่อผู้ใช้และรหัสผ่านสำหรับ FTP Server (ใช้กับFileZilla Client แต่คงไม่ได้ใช้หรอก) *---*
     environment:
       # ตัวแปร environment สำหรับตั้งค่า pure-ftpd
-
+      
       PUBLICHOST: "127.0.0.1"
       # ระบุ IP ของเครื่องที่ให้ FTP Client เชื่อมต่อ
       # ใช้ localhost เพราะรันบนเครื่องเดียวกัน
-
+      
       FTP_USER_NAME: YJ
       # กำหนดชื่อผู้ใช้ FTP อัตโนมัติ
 
@@ -55,6 +50,7 @@ services:
       # --forcepassiveip   : บังคับใช้ IP นี้ในการเชื่อมต่อ passive
 
     volumes:
+      # *---* ตรงนี้คือการเชื่อมโฟลเดอร์ในเครื่องกับใน container เพื่อให้ไฟล์ไม่หายเมื่อปิด Docker *---*
       - ./server_files:/home/ftpusers
       # map โฟลเดอร์ server_files บนเครื่อง host
       # ไปยัง /home/ftpusers ภายใน container
@@ -63,3 +59,5 @@ services:
     restart: always
     # หาก container หยุดทำงาน จะ restart อัตโนมัติ
     # เพิ่มความเสถียรของระบบ
+
+    

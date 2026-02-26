@@ -46,6 +46,8 @@
 # session → เก็บสถานะการ login
 # send_from_directory → ส่งไฟล์ให้ดาวน์โหลด
 # abort → ใช้ส่ง error เช่น 404
+
+# *---* ส่วนนี้คือการเรียกใช้ library ต่างๆ Flask ใช้สร้างเว็บ ftplib ใช้เชื่อมต่อ FTP และ os ใช้จัดการไฟล์ในเครื่อง *---*
 from flask import Flask, request, render_template, redirect, session, send_from_directory, abort
 
 # secure_filename → ป้องกันชื่อไฟล์อันตราย (เช่น ../)
@@ -57,7 +59,6 @@ from ftplib import FTP
 # os → ใช้จัดการไฟล์และโฟลเดอร์ในระบบ
 import os
 
-
 # ================================
 # สร้าง Flask Application
 # ================================
@@ -65,6 +66,8 @@ import os
 # สร้าง Web Application ด้วย Flask
 # secret_key ใช้สำหรับเข้ารหัส session
 # ถ้าไม่มี secret_key ระบบ login จะไม่ทำงาน
+
+# *---* สร้าง Flask Application และตั้งค่า secret_key *---*
 app = Flask(__name__)
 app.secret_key = "secret123"
 
@@ -73,10 +76,8 @@ app.secret_key = "secret123"
 # การตั้งค่าโฟลเดอร์
 # ================================
 
-# UPLOAD_FOLDER → โฟลเดอร์เก็บไฟล์แบบ Local
-# TEMP_FOLDER → โฟลเดอร์เก็บไฟล์ชั่วคราวตอน Download จาก FTP
-UPLOAD_FOLDER = "uploads"
-TEMP_FOLDER = "temp"
+UPLOAD_FOLDER = "uploads" # *---* โฟลเดอร์เก็บไฟล์ที่อัปโหลดเข้ามาในเครื่อง *---*
+TEMP_FOLDER = "temp" # *---* โฟลเดอร์เก็บไฟล์ชั่วคราวตอนดาวน์โหลดจาก FTP ก่อนส่งให้ผู้ใช้ *---*
 
 # กำหนดค่าให้ Flask รู้จักโฟลเดอร์อัปโหลด
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -107,10 +108,8 @@ os.makedirs(TEMP_FOLDER, exist_ok=True)
 # ฟังก์ชันเชื่อมต่อ FTP
 # ================================
 
-# ฟังก์ชันกลางสำหรับเชื่อมต่อ FTP
-# ใช้ username/password ที่เก็บใน session
-# ช่วยลดโค้ดซ้ำ และควบคุมการเชื่อมต่อได้ง่าย
-def ftp_connect():
+# *---* ฟังก์ชันนี้ใช้เชื่อมต่อไปยัง FTP Server โดยใช้ username และ password ถ้าเชื่อมต่อสำเร็จระบบจะสามารถสั่งงาน FTP หรือก็คือเข้าไปใช้งานได้ *---*
+def ftp_connect(): 
     # ถ้ายังไม่ได้ login FTP → ไม่ให้เชื่อม
     if "ftp_user" not in session or "ftp_pass" not in session:
         return None
@@ -128,13 +127,11 @@ def ftp_connect():
 
 
 # ================================
-# WEB LOGIN
+# WEB LOGIN 
 # ================================
 
-# หน้า Login ของเว็บ (ไม่ใช่ FTP Login)
-# ตรวจสอบ username/password จากไฟล์ users.txt
-# ถ้าถูกต้อง → สร้าง session และเข้า dashboard
-@app.route("/", methods=["GET", "POST"])
+# ส่วนนี้คือระบบสมัครสมาชิกและล็อกอิน จะบันทึกข้อมูลผู้ใช้ไว้ในไฟล์ users.txt ถ้าล็อกอินสำเร็จจะเข้าสู่หน้า แดชบอร์ด
+@app.route("/", methods=["GET", "POST"]) 
 def login():
     if request.method == "POST":
         # รับข้อมูลจาก form
@@ -163,10 +160,11 @@ def login():
 
 
 # ================================
-# REGISTER
+# REGISTER 
 # ================================
-
 # สมัครสมาชิกใหม่ (Web User)
+
+# *---* อันนี้ก็เหมือนกัน แต่เป็นการสมัครสมาชิก จะบันทึกข้อมูลลงไฟล์ users.txt และตรวจสอบว่ามี username ซ้ำหรือไม่ ถ้ามีจะไม่ให้สมัครซ้ำ *---*
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -191,10 +189,10 @@ def register():
 
 
 # ================================
-# DASHBOARD (LOCAL FILE)
+# DASHBOARD
 # ================================
 
-# หน้า Dashboard สำหรับจัดการไฟล์ในเครื่อง
+# หน้าแดชบอร์ด สำหรับจัดการไฟล์ในเครื่อง
 @app.route("/dashboard")
 def dashboard():
     # ถ้ายังไม่ได้ login → กลับหน้า login
@@ -217,10 +215,11 @@ def dashboard():
 
 
 # ================================
-# UPLOAD FILE (LOCAL)
+# UPLOAD 
 # ================================
-
 # อัปโหลดไฟล์เข้าเครื่อง
+
+# ส่วนนี้คือการอัปโหลดไฟล์ คำสั่ง storbinary คือคำสั่งส่งไฟล์ไปเก็บใน FTP Server
 @app.route("/upload", methods=["POST"])
 def upload():
     if "user" not in session:
@@ -242,10 +241,11 @@ def upload():
 
 
 # ================================
-# DOWNLOAD FILE (LOCAL)
+# DOWNLOAD
 # ================================
-
 # ดาวน์โหลดไฟล์จากเครื่อง
+
+# ส่วนนี้คือการดาวน์โหลดไฟล์ คำสั่ง retrbinary คือการดึงไฟล์จาก FTP Server กลับมา
 @app.route("/download/<filename>")
 def download(filename):
     if "user" not in session:
@@ -263,7 +263,7 @@ def download(filename):
 
 
 # ================================
-# DELETE FILE (LOCAL)
+# DELETE
 # ================================
 
 # ลบไฟล์ในเครื่อง
@@ -415,4 +415,6 @@ def logout():
 if __name__ == "__main__":
     app.run(debug=True)
 
-# ใช้คำสั่ง: python app.py เพื่อรันโปรแกรม
+# สรุปคือไฟล์ app.py ทำหน้าที่เป็นตัวกลาง รับคำสั่งจากผู้ใช้ผ่านเว็บ แล้วส่งคำสั่งไปยัง FTP Server ที่รันใน Docker เพื่อจัดการไฟล์
+# ใช้คำสั่ง docker-compose up คำสั่งนี้ใช้เปิด FTP Server 
+# ใช้คำสั่ง python app.py เพื่อรันโปรแกรม
